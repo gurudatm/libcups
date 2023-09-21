@@ -447,18 +447,19 @@ cupsConnectDest(
     void           *user_data)		// I - User data pointer
 {
   const char	*uri;			// Printer URI
-  char		scheme[32],		// URI scheme
-		userpass[256],		// Username and password (unused)
-		hostname[256],		// Hostname
-		tempresource[1024];	// Temporary resource buffer
+  char		scheme[32]={0},		// URI scheme
+		userpass[256]={0},	// Username and password (unused)
+		hostname[256]={0},	// Hostname
+		tempresource[1024]={0};	// Temporary resource buffer
   int		port;			// Port number
-  char		portstr[16];		// Port number string
+  char		portstr[16]={0};	// Port number string
   http_encryption_t encryption;		// Encryption to use
   http_addrlist_t *addrlist;		// Address list for server
   http_t	*http;			// Connection to server
 
 
   DEBUG_printf("cupsConnectDest(dest=%p, flags=0x%x, msec=%d, cancel=%p(%d), resource=\"%s\", resourcesize=" CUPS_LLFMT ", cb=%p, user_data=%p)", (void *)dest, flags, msec, (void *)cancel, cancel ? *cancel : -1, resource, CUPS_LLCAST resourcesize, (void *)cb, user_data);
+  printf("cupsConnectDest(dest=%p, flags=0x%x, msec=%d, cancel=%p(%d), resource=\"%s\", resourcesize=" CUPS_LLFMT ", cb=%p, user_data=%p)", (void *)dest, flags, msec, (void *)cancel, cancel ? *cancel : -1, resource, CUPS_LLCAST resourcesize, (void *)cb, user_data);
 
   // Range check input...
   if (!dest)
@@ -968,9 +969,10 @@ cupsGetDestWithURI(const char *name,	// I - Desired printer name or `NULL`
     return (NULL);
   }
 
-  if (httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource)) < HTTP_URI_STATUS_OK ||
-      (strncmp(uri, "ipp://", 6) && strncmp(uri, "ipps://", 7)))
-  {
+  http_uri_status_t	uristatus;		// Result of separation
+  uristatus = HTTP_URI_STATUS_OK ;		// Result of separation
+  uristatus= httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme), userpass, sizeof(userpass), hostname, sizeof(hostname), &port, resource, sizeof(resource));
+  if ( uristatus < HTTP_URI_STATUS_OK ){
     _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Bad printer-uri."), 1);
 
     return (NULL);

@@ -76,7 +76,11 @@ typedef struct _cups_globals_s		// CUPS global state data
 {
   // Multiple places...
   const char		*datadir,	// Data directory (CUPS_DATADIR environment var)
-			*sysconfig;	// System config files (CUPS_SERVERROOT environment var)
+			*cups_serverbin,// CUPS_SERVERBIN environment var
+			*sysconfig,	// System config files (CUPS_SERVERROOT environment var)
+			*cups_statedir,	// CUPS_STATEDIR environment var
+			*home,		// HOME environment var
+			*localedir;	// LOCALDIR environment var
   char			*userconfig;	// User-specific config files
 #ifndef _WIN32
 #define PW_BUF_SIZE 16384		// As per glibc manual page
