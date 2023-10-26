@@ -24,7 +24,7 @@
 #  define MSG_DONTWAIT 0
 #endif // !MSG_DONTWAIT
 
-
+#define DEBUG_printf printf
 //
 // 'cupsDoFileRequest()' - Do an IPP request with a file.
 //
@@ -100,7 +100,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
   char		buffer[32768];		// Output buffer
 
 
-  DEBUG_printf("cupsDoIORequest(http=%p, request=%p(%s), resource=\"%s\", infile=%d, outfile=%d)", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, infile, outfile);
+  DEBUG_printf("cupsDoIORequest(http=%p, request=%p(%s), resource=\"%s\", infile=%d, outfile=%d) \n", (void *)http, (void *)request, request ? ippOpString(request->request.op.operation_id) : "?", resource, infile, outfile);
 
   // Range check input...
   if (!request || !resource)
@@ -157,7 +157,7 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     length = ippGetLength(request);
   }
 
-  DEBUG_printf("2cupsDoIORequest: Request length=%ld, total length=%ld", (long)ippGetLength(request), (long)length);
+  DEBUG_printf("2cupsDoIORequest: Request length=%ld, total length=%ld  \n", (long)ippGetLength(request), (long)length);
 
   // Clear any "Local" authentication data since it is probably stale...
   if (http->authstring && !strncmp(http->authstring, "Local ", 6))
@@ -171,7 +171,8 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     // Send the request...
     status = cupsSendRequest(http, request, resource, length);
 
-    DEBUG_printf("2cupsDoIORequest: status=%d", status);
+    printf("2cupsDoIORequest: status=%d \n", status);
+    DEBUG_printf("2cupsDoIORequest: status=%d \n", status);
 
     if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA && infile >= 0)
     {
@@ -194,11 +195,14 @@ cupsDoIORequest(http_t     *http,	// I - Connection to server or `CUPS_HTTP_DEFA
     // Get the server's response...
     if (status <= HTTP_STATUS_CONTINUE || status == HTTP_STATUS_OK)
     {
+  printf("http=%p, resource=%s \n", (void *)http,  resource);
       response = cupsGetResponse(http, resource);
+      printf("2cupsDoIORequest response obtained status=%d \n", status);
       status   = httpGetStatus(http);
     }
 
-    DEBUG_printf("2cupsDoIORequest: status=%d", status);
+    printf("2cupsDoIORequest: status=%d \n", status);
+    DEBUG_printf("2cupsDoIORequest: status=%d \n", status);
 
     if (status == HTTP_STATUS_ERROR || (status >= HTTP_STATUS_BAD_REQUEST && status != HTTP_STATUS_UNAUTHORIZED && status != HTTP_STATUS_UPGRADE_REQUIRED))
     {

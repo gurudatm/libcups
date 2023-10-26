@@ -258,7 +258,7 @@ clean:
 #
 
 depend:
-	$(CC) -MM -I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' >Dependencies
+	$(CC) -MM -I.. -DTLS1_3_VERSION -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS) $(OBJS:.o=.c) | sed -e '1,$$s/ \/usr\/include\/[^ ]*//g' -e '1,$$s/ \/usr\/local\/include\/[^ ]*//g' >Dependencies
 
 
 #
@@ -344,7 +344,7 @@ stringsh:
 
 libcups.so.3 libcups3.so.3:	$(LIBOBJS)
 	echo Linking $@...
-	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ $(LIBOBJS) $(LIBS)
+	$(CC) $(DSOFLAGS) $(OPTIM) -DTLS1_3_VERSION -o $@ $(LIBOBJS) $(LIBS)
 	$(RM) `basename $@ .3`
 	$(LN) $@ `basename $@ .3`
 
@@ -355,7 +355,7 @@ libcups.so.3 libcups3.so.3:	$(LIBOBJS)
 
 libcups.3.dylib libcups3.3.dylib:	$(LIBOBJS)
 	echo Linking $@...
-	$(CC) $(DSOFLAGS) $(OPTIM) -o $@ -install_name $(libdir)/$@ \
+	$(CC) $(DSOFLAGS) $(OPTIM) -DTLS1_3_VERSION -o $@ -install_name $(libdir)/$@ \
 		-current_version 3.0.0 -compatibility_version 3.0.0 \
 		$(LIBOBJS) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
@@ -427,7 +427,6 @@ testclient:	testclient.o $(LIBCUPS_STATIC)
 	echo Linking $@...
 	$(CC) $(LDFLAGS) $(OPTIM) -o $@ testclient.o $(LIBCUPS_STATIC) $(LIBS)
 	$(CODE_SIGN) $(CSFLAGS) $@
-
 
 #
 # testcreds (dependency on static CUPS library is intentional)

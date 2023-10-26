@@ -271,7 +271,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
   ipp_attribute_t       *attr;          // Printer attribute
   const char            *type = NULL;   // Raster type (colorspace + bits)
   pwg_media_t           *pwg = NULL;	// Media size
-  cups_media_t		media;		// Media information
+  cups_size_t		media;		// Media information
   int                   xdpi = 0,       // Horizontal resolution
                         ydpi = 0;       // Vertical resolution
   int                   fd;             // Temporary file
@@ -445,7 +445,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
 
   if (!cupsRasterInitHeader(&header, &media, /*optimize*/NULL, IPP_QUALITY_NORMAL, /*intent*/NULL, IPP_ORIENT_PORTRAIT, "one-sided", type, xdpi, ydpi, NULL))
   {
-    printf("Unable to initialize raster context: %s\n", cupsRasterGetErrorString());
+    printf("Unable to initialize raster context: %s\n", cupsRasterErrorString());
     return (NULL);
   }
 
@@ -473,7 +473,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
     return (NULL);
   }
 
-  if ((fd = cupsCreateTempFd(NULL, ".pwg", tempname, tempsize)) < 0)
+  if ((fd = cupsTempFd(NULL, ".pwg", tempname, tempsize)) < 0)
   {
     printf("Unable to create temporary print file: %s\n", strerror(errno));
     free(line);
@@ -482,7 +482,7 @@ make_raster_file(ipp_t      *response,  // I - Printer attributes
 
   if ((ras = cupsRasterOpen(fd, mode)) == NULL)
   {
-    printf("Unable to open raster stream: %s\n", cupsRasterGetErrorString());
+    printf("Unable to open raster stream: %s\n", cupsRasterErrorString());
     close(fd);
     free(line);
     return (NULL);

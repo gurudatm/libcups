@@ -170,7 +170,6 @@ cupsCreateCredentials(
     const char         *state_province,	// I - State/province or `NULL` for "Unknown"
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
-    const char         *email,		// I - Email address or `NULL` for none
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names,	// I - Subject Alternate Names
     const char         *root_name,	// I - Root certificate/domain name or `NULL` for site/self-signed
@@ -270,8 +269,6 @@ cupsCreateCredentials(
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, org_unit, strlen(org_unit));
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, state_province, strlen(state_province));
   gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_X520_LOCALITY_NAME, 0, locality, strlen(locality));
-  if (email && *email)
-    gnutls_x509_crt_set_dn_by_oid(crt, GNUTLS_OID_PKCS9_EMAIL, 0, email, (unsigned)strlen(email));
   gnutls_x509_crt_set_key(crt, key);
   gnutls_x509_crt_set_serial(crt, serial, sizeof(serial));
   gnutls_x509_crt_set_activation_time(crt, curtime);
@@ -496,7 +493,6 @@ cupsCreateCredentialsRequest(
     const char         *state_province,	// I - State/province or `NULL` for "Unknown"
     const char         *country,	// I - Country or `NULL` for locale-based default
     const char         *common_name,	// I - Common name
-    const char         *email,		// I - Email address or `NULL` for none
     size_t             num_alt_names,	// I - Number of subject alternate names
     const char * const *alt_names)	// I - Subject Alternate Names
 {
@@ -577,8 +573,6 @@ cupsCreateCredentialsRequest(
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_ORGANIZATIONAL_UNIT_NAME, 0, org_unit, (unsigned)strlen(org_unit));
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_STATE_OR_PROVINCE_NAME, 0, state_province, (unsigned)strlen(state_province));
   gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_X520_LOCALITY_NAME, 0, locality, (unsigned)strlen(locality));
-  if (email && *email)
-    gnutls_x509_crq_set_dn_by_oid(crq, GNUTLS_OID_PKCS9_EMAIL, 0, email, (unsigned)strlen(email));
   gnutls_x509_crq_set_key(crq, key);
   gnutls_x509_crq_set_subject_alt_name(crq, GNUTLS_SAN_DNSNAME, common_name, (unsigned)strlen(common_name), GNUTLS_FSAN_SET);
   if (!strchr(common_name, '.'))
@@ -1638,7 +1632,7 @@ _httpTLSStart(http_t *http)		// I - Connection to server
     {
       DEBUG_printf("4_httpTLSStart: Auto-create credentials for \"%s\".", cn);
 
-      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, /*email*/NULL, 0, NULL, NULL, time(NULL) + 3650 * 86400))
+      if (!cupsCreateCredentials(tls_keypath, false, CUPS_CREDPURPOSE_SERVER_AUTH, CUPS_CREDTYPE_DEFAULT, CUPS_CREDUSAGE_DEFAULT_TLS, NULL, NULL, NULL, NULL, NULL, cn, 0, NULL, NULL, time(NULL) + 3650 * 86400))
       {
 	DEBUG_puts("4_httpTLSStart: cupsCreateCredentials failed.");
 	http->error  = errno = EINVAL;

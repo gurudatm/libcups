@@ -23,8 +23,8 @@ DIRS	=	cups tools
 
 all:
 	echo "Using CC=\"$(CC)\""
-	echo "Using CFLAGS=\"-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(CFLAGS) $(OPTIM) $(WARNINGS)\""
-	echo "Using CPPFLAGS=\"-I.. -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)\""
+	echo "Using CFLAGS=\"-I.. -O0 -D_CUPS_SOURCE $(CPPFLAGS) $(CFLAGS) $(OPTIM) $(WARNINGS)\""
+	echo "Using CPPFLAGS=\"-I.. -O0 -D_CUPS_SOURCE $(CPPFLAGS) $(OPTIONS)\""
 	echo "Using DSOFLAGS=\"$(DSOFLAGS)\""
 	echo "Using LDFLAGS=\"$(LDFLAGS)\""
 	echo "Using LIBS=\"$(LIBS)\""

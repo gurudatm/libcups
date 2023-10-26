@@ -85,14 +85,15 @@ static void	cups_gss_printf(OM_uint32 major_status, OM_uint32 minor_status,
 #  endif /* DEBUG */
 #endif /* HAVE_GSSAPI */
 static int	cups_is_local_connection(http_t *http);
-static int	cups_local_auth(http_t *http);
+static bool	cups_do_local_auth(http_t *http);
 
 const char* uprintSVCHost = "localhost";
 int port = 7505;
 char* uprintSVCResource = "/accesstoken";
+
 void getTokenData(char** accessToken, char** expires_on) {
     http_t* http;
-    if ((http = httpConnect2(uprintSVCHost, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_NEVER, 1,
+    if ((http = httpConnect(uprintSVCHost, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_NEVER, 1,
         30000, NULL)) == NULL)
     {
         return;
@@ -103,7 +104,7 @@ void getTokenData(char** accessToken, char** expires_on) {
     char		if_modified_since[HTTP_MAX_VALUE];
     int		new_auth = 0;		/* Using new auth information? */
     int		digest;			/* Are we using Digest authentication? */
-    status = httpGet(http, uprintSVCResource);
+    status = (httpWriteRequest(http, "GET", uprintSVCResource));
     while ((status = httpUpdate(http)) == HTTP_STATUS_CONTINUE);
 
     if (status == HTTP_STATUS_UNAUTHORIZED)
@@ -124,7 +125,7 @@ void getTokenData(char** accessToken, char** expires_on) {
             status = HTTP_STATUS_CUPS_AUTHORIZATION_CANCELED;
         }
 
-        if (httpReconnect2(http, 30000, NULL))
+        if (httpReconnect(http, 30000, NULL))
         {
             status = HTTP_STATUS_ERROR;
         }
@@ -153,12 +154,26 @@ void getTokenData(char** accessToken, char** expires_on) {
     {
         size_t contentSize = 0;
         char* buf = buffer;
-        while ((bytes = httpRead2(http, buf, 8192)) > 0) {
+        while ((bytes = httpRead(http, buf, 8192)) > 0) {
             buf += bytes;
             contentSize += bytes;
         }
         *buf = '\0';
-        //printf("%s", buffer);
+        printf("buffer: {\n %s\n}\n", buffer);
+	cups_json_t	*json;
+        if ((json = cupsJSONImportString(buffer)) != NULL)
+	{
+		cups_json_t	*json_accessToken,
+				*json_expires_on;
+		if ((json_accessToken = cupsJSONFind(json, "access_token")) != NULL){
+			*accessToken= cupsJSONGetString(json_accessToken);
+		}
+		if ((json_expires_on= cupsJSONFind(json, "expires_on")) != NULL){
+			*expires_on= cupsJSONGetString(json_expires_on);
+		}
+
+	}
+#if 0
         json_value* value;
         json_char* json;
         json = (json_char*)buffer;
@@ -168,7 +183,6 @@ void getTokenData(char** accessToken, char** expires_on) {
             DEBUG_printf(("getToken: unable to parse token data.\n"));
             return;
         }
-#if 1
         if (value && value->u.object.values && value->u.object.length == 8) {
             *accessToken = value->u.object.values[6].value->u.string.ptr;
             *expires_on = value->u.object.values[3].value->u.string.ptr;
@@ -235,7 +249,7 @@ cupsDoAuthentication(
   // See if we can do local authentication...
   if (http->digest_tries < 3)
   {
-    if ((localauth = cups_local_auth(http)) == 0)
+    if ((localauth = cups_do_local_auth(http)) == 0)
     {
       DEBUG_printf("2cupsDoAuthentication: authstring=\"%s\"", http->authstring);
 
@@ -416,7 +430,7 @@ cupsDoAuthentication(
   {
       httpSetAuthString(http, "Bearer", AADToken);
       // keep the token file around until it has expired.
-      return (0);
+      return (true);
   }
   
   if (http->authstring && http->authstring[0])
@@ -1011,7 +1025,7 @@ static int				/* O - 0 if not a local connection */
 					/*     1  if local connection */
 cups_is_local_connection(http_t *http)	/* I - HTTP connection to server */
 {
-  if (!httpAddrLocalhost(http->hostaddr) && _cups_strcasecmp(http->hostname, "localhost") != 0)
+  if (!httpAddrIsLocalhost(http->hostaddr) && _cups_strcasecmp(http->hostname, "localhost") != 0)
     return 0;
   return 1;
 }
@@ -1054,7 +1068,7 @@ cups_do_local_auth(http_t *http)	// I - HTTP connection to server
 #  endif /* HAVE_AUTHORIZATION_H */
 
 
-  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrString(http->hostaddr, filename, sizeof(filename)), http->hostname));
+  DEBUG_printf(("7cups_local_auth(http=%p) hostaddr=%s, hostname=\"%s\"", (void *)http, httpAddrGetString(http->hostaddr, filename, sizeof(filename)), http->hostname));
 
  /*
   * See if we are accessing localhost...
